@@ -1,0 +1,89 @@
+// Switch to (or create) the 'school' database
+use school;
+
+// Insert multiple student documents into the 'students' collection
+db.students.insertMany([
+  { name: "Alice", marks: 85, class: "A" },
+  { name: "Bob", marks: 78, class: "B" },
+  { name: "Charlie", marks: 90, class: "A" },
+  { name: "David", marks: 65, class: "B" },
+  { name: "Eve", marks: 92, class: "A" },
+  { name: "Frank", marks: 70, class: "C" },
+  { name: "Grace", marks: 88, class: "C" }
+]);
+
+// Aggregation: combine and analyze data
+// $group: groups documents that have the same value for a specified field
+// _id: the field to group by (here, 'class')
+// $avg: calculates the average marks of students in each class
+db.students.aggregate([
+  {
+    $group: {
+      _id: "$class",        // Group students by class
+      averageMarks: { $avg: "$marks" }  // Calculate average marks per class
+    }
+  }
+]);
+
+// Add another aggregation to count students per class
+db.students.aggregate([
+  {
+    $group: {
+      _id: "$class",            // Group by class
+      totalStudents: { $sum: 1 } // Count how many students are in each class
+    }
+  }
+]);
+
+// Indexing: Improve the speed of queries on large data
+// createIndex(): builds an index on the specified field
+// Index on 'class' helps MongoDB quickly find and group by class values
+db.students.createIndex({ class: 1 });
+
+// Explanation:
+// - Aggregation is like asking MongoDB to summarize or analyze data (like average, count).
+// - Indexing is like making a shortcut—MongoDB finds data faster when fields are indexed.
+
+
+// Filtering: Only include students with marks greater than 80
+// $match: filters documents before other stages (like WHERE in SQL)
+db.students.aggregate([
+    {
+      $match: { marks: { $gt: 80 } } // Only students with marks > 80
+    },
+    {
+      $project: {
+        name: 1,
+        marks: 1,
+        _id: 0   // Exclude the default _id field from output
+      }
+    }
+  ]);
+  
+  // Sorting students by marks in descending order
+  // $sort: sorts documents, -1 for descending, 1 for ascending
+  db.students.aggregate([
+    {
+      $sort: { marks: -1 }  // Highest to lowest marks
+    }
+  ]);
+  
+  // Combining $match and $group: Average marks only for class A
+  db.students.aggregate([
+    { $match: { class: "A" } }, // First filter by class A
+    {
+      $group: {
+        _id: "$class",
+        avgMarks: { $avg: "$marks" }
+      }
+    }
+  ]);
+  
+  // Create a compound index on both class and marks
+  // Helps when queries filter or sort using both fields
+  db.students.createIndex({ class: 1, marks: -1 });
+  
+  // Explanation:
+  // - $project controls which fields to show.
+  // - Compound index (on two fields) speeds up complex queries.
+  
