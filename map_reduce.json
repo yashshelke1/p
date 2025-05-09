@@ -1,0 +1,44 @@
+// Switch to or create the 'school' database
+use school;
+
+// Insert sample data into 'students' collection
+db.students.insertMany([
+  { name: "Alice", subject: "Math", marks: 85 },
+  { name: "Bob", subject: "Math", marks: 78 },
+  { name: "Charlie", subject: "Science", marks: 90 },
+  { name: "David", subject: "Math", marks: 65 },
+  { name: "Eve", subject: "Science", marks: 92 },
+  { name: "Frank", subject: "English", marks: 70 },
+  { name: "Grace", subject: "English", marks: 88 }
+]);
+
+// Define a map function:
+// It emits each subject as key, and marks as value
+// emit(key, value) means: group data by 'key'
+var mapFunction = function () {
+  emit(this.subject, this.marks);
+};
+
+// Define a reduce function:
+// It receives key (subject) and an array of all marks for that subject
+// It returns the total (sum) of marks
+var reduceFunction = function (subject, marksArray) {
+  return Array.sum(marksArray);
+};
+
+// Run the mapReduce operation
+db.students.mapReduce(
+  mapFunction,
+  reduceFunction,
+  {
+    out: "total_marks_per_subject" // Output will be stored in this new collection
+  }
+);
+
+// View the result
+db.total_marks_per_subject.find();
+
+// Explanation:
+// - Map emits subject-mark pairs.
+// - Reduce groups marks by subject and sums them up.
+// - Output is stored in another collection.
