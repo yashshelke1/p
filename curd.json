@@ -1,0 +1,146 @@
+// 1. Create a new database and collection
+use UniversityDB;
+
+// 2. Insert documents (Create operations)
+db.students.insertMany([
+  {
+    _id: 1,
+    name: "Rahul Sharma",
+    age: 20,
+    department: "Computer Science",
+    courses: ["Database", "Programming"],
+    fees_paid: true,
+    attendance: 85
+  },
+  {
+    _id: 2,
+    name: "Priya Patel",
+    age: 19,
+    department: "Electronics",
+    courses: ["Circuits", "Mathematics"],
+    fees_paid: false,
+    attendance: 78
+  },
+  {
+    _id: 3,
+    name: "Amit Kumar",
+    age: 21,
+    department: "Computer Science",
+    courses: ["Programming", "Algorithms"],
+    fees_paid: true,
+    attendance: 92
+  },
+  {
+    _id: 4,
+    name: "Neha Gupta",
+    age: 20,
+    department: "Mathematics",
+    courses: ["Calculus", "Statistics"],
+    fees_paid: false,
+    attendance: 65
+  }
+]);
+
+// 3. Read operations (Query documents)
+// 3.1 Find all students
+print("All students:");
+db.students.find().pretty();
+
+// 3.2 Find Computer Science students
+print("\nComputer Science students:");
+db.students.find({ department: "Computer Science" }).pretty();
+
+// 3.3 Find with logical AND (CS students with good attendance)
+print("\nCS students with attendance > 80:");
+db.students.find({
+  department: "Computer Science",
+  attendance: { $gt: 80 }
+}).pretty();
+
+
+// 3.4 Find with logical OR (either unpaid fees or low attendance)
+print("\nStudents with unpaid fees OR attendance < 70:");
+db.students.find({
+  $or: [
+    { fees_paid: false },
+    { attendance: { $lt: 70 } }
+  ]
+}).pretty();
+
+
+// 3.5 Find with projection (only names and courses)
+print("\nStudent names and their courses:");
+db.students.find(
+  {},
+  { name: 1, courses: 1, _id: 0 }
+).pretty();
+
+// 4. Update operations
+// 4.1 Update single document (mark Priya's fees as paid)
+print("\nUpdating Priya's fees status:");
+db.students.updateOne(
+  { name: "Priya Patel" },
+  { $set: { fees_paid: true } }
+);
+db.students.find({ name: "Priya Patel" }).pretty();
+
+// 4.2 Update multiple documents (increment all CS students' attendance by 5)
+print("\nBoosting CS students' attendance:");
+db.students.updateMany(
+  { department: "Computer Science" },
+  { $inc: { attendance: 5 } }
+);
+db.students.find({ department: "Computer Science" }).pretty();
+
+// 4.3 Add course to student's array
+print("\nAdding new course to Rahul:");
+db.students.updateOne(
+  { name: "Rahul Sharma" },
+  { $push: { courses: "Networking" } }
+);
+db.students.find({ name: "Rahul Sharma" }).pretty();
+
+// 5. Delete operations
+// 5.1 Delete student with poor attendance
+print("\nRemoving student with attendance < 70:");
+db.students.deleteOne({ attendance: { $lt: 70 } });
+db.students.find().pretty();
+
+// 5.2 Delete all unpaid students (commented out for safety)
+// print("\nRemoving all unpaid students:");
+// db.students.deleteMany({ fees_paid: false });
+// db.students.find().pretty();
+
+// 6. Advanced queries
+// 6.1 Find students taking Programming
+print("\nStudents taking Programming course:");
+db.students.find({ courses: "Programming" }).pretty();
+
+// 6.2 Find students with names starting with 'A'
+print("\nStudents with names starting with A:");
+db.students.find({ name: /^A/ }).pretty();
+
+// 6.3 Count CS students
+print("\nNumber of Computer Science students:");
+db.students.countDocuments({ department: "Computer Science" });
+
+// 6.4 Sort students by age (ascending)
+print("\nStudents sorted by age:");
+db.students.find().sort({ age: 1 }).pretty();
+
+// 7. SAVE method example (upsert)
+print("\nUsing save() to update existing document:");
+var student = db.students.findOne({ _id: 2 });
+student.attendance = 90;
+db.students.save(student);
+db.students.find({ _id: 2 }).pretty();
+
+print("\nUsing save() to insert new document:");
+db.students.save({
+  _id: 5,
+  name: "Sanjay Verma",
+  age: 22,
+  department: "Physics",
+  fees_paid: true
+});
+db.students.find({ _id: 5 }).pretty();
